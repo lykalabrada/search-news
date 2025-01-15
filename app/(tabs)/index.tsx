@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, FlatList, StyleSheet, TouchableOpacity, Linking, ActivityIndicator } from 'react-native';
 import axios from 'axios';
+import Constants from 'expo-constants';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 
-const NEWS_API_KEY = '183daca270264bad86fc5b72972fb82a'
+
+
+const NEWS_API_KEY = Constants.expoConfig.extra?.NEWS_API_KEY;
 
 interface Article {
   title: string;
@@ -77,6 +80,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     backgroundColor: '#f9f9f9',
+    marginTop: 20
   },
   input: {
     height: 45,
