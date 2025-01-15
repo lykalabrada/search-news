@@ -1,74 +1,117 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TextInput, FlatList, StyleSheet, TouchableOpacity, Linking, ActivityIndicator } from 'react-native';
+import axios from 'axios';
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 
+const NEWS_API_KEY = '183daca270264bad86fc5b72972fb82a'
+
+interface Article {
+  title: string;
+  description: string;
+  url: string;
+}
+
+
 export default function HomeScreen() {
+  const [query, setQuery] = useState<string>(''); 
+  const [results, setResults] = useState<Article[]>([]); 
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>(''); 
+
+  const handleSearch = async () => {
+    if (!query) return;
+    setLoading(true);
+    setError('');
+    
+    try {
+      const response = await axios.get('https://newsapi.org/v2/everything', {
+        params: { q: query, apiKey: NEWS_API_KEY }
+      });
+      setResults(response.data.articles);
+    } catch (err) {
+      setError('Error fetching news')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <View style={styles.container}>
+      <ThemedText type='title'>Search News</ThemedText>
+      <TextInput
+        style={styles.input}
+        placeholder="Enter search term"
+        value={query}
+        onChangeText={setQuery}
+        placeholderTextColor="#888"
+      />
+      <TouchableOpacity style={styles.button} onPress={handleSearch}>
+        <Text style={styles.buttonText}>Search</Text>
+      </TouchableOpacity>
+
+      {loading && <ActivityIndicator size="large" color="#007bff" style={styles.loading} />}
+      {error && <ThemedText type="error">{error}</ThemedText>}
+
+      <FlatList
+        data={results}
+        keyExtractor={(_, index) => index.toString()}
+        renderItem={({ item }) => (
+          <ThemedView style={styles.item}>
+            <ThemedText type='defaultSemiBold'>{item.title}</ThemedText>
+            <ThemedText type='default'>{item.description}</ThemedText>
+            <TouchableOpacity onPress={() => Linking.openURL(item.url)}>
+              <ThemedText type='link'>Read more</ThemedText>
+            </TouchableOpacity> 
+          </ThemedView>
+        )}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
+  container: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: '#f9f9f9',
+  },
+  input: {
+    height: 45,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 8,
+    marginBottom: 15,
+    paddingLeft: 10,
+    fontSize: 16,
+    backgroundColor: '#fff',
+  },
+  button: {
+    backgroundColor: '#007bff',
+    paddingVertical: 12,
+    borderRadius: 8,
     alignItems: 'center',
-    gap: 8,
+    marginBottom: 20,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  buttonText: {
+    fontSize: 18,
+    color: '#fff',
+    fontWeight: 'bold',
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  loading: {
+    marginVertical: 20,
+  },
+  item: {
+    backgroundColor: '#fff',
+    padding: 15,
+    marginBottom: 15,
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
   },
 });
+
