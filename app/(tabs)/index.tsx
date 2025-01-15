@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, FlatList, StyleSheet, TouchableOpacity, Linking, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, FlatList, StyleSheet, TouchableOpacity, Linking, ActivityIndicator, Image } from 'react-native';
 import axios from 'axios';
 import Constants from 'expo-constants';
 
@@ -14,6 +14,7 @@ interface Article {
   title: string;
   description: string;
   url: string;
+  urlToImage?: string;
 }
 
 
@@ -50,6 +51,8 @@ export default function HomeScreen() {
         value={query}
         onChangeText={setQuery}
         placeholderTextColor="#888"
+        onSubmitEditing={handleSearch}
+        returnKeyType="search"
       />
       <TouchableOpacity style={styles.button} onPress={handleSearch}>
         <Text style={styles.buttonText}>Search</Text>
@@ -63,6 +66,13 @@ export default function HomeScreen() {
         keyExtractor={(_, index) => index.toString()}
         renderItem={({ item }) => (
           <ThemedView style={styles.item}>
+            {item.urlToImage && (
+              <Image
+                source={{ uri: item.urlToImage }}
+                style={styles.image}
+                resizeMode="cover"
+              />
+            )}
             <ThemedText type='defaultSemiBold'>{item.title}</ThemedText>
             <ThemedText type='default'>{item.description}</ThemedText>
             <TouchableOpacity onPress={() => Linking.openURL(item.url)}>
@@ -106,6 +116,12 @@ const styles = StyleSheet.create({
   },
   loading: {
     marginVertical: 20,
+  },
+  image: {
+    width: '100%',
+    height: 200,
+    borderRadius: 8,
+    marginBottom: 10,
   },
   item: {
     backgroundColor: '#fff',
